@@ -135,6 +135,6 @@ docker-compose --env-file .env up -d
 
 ## 👨‍💻 Autor
 
-> Desenvolvido por
+> Desenvolvido por https://github.com/rsrocha2020.
 
 
