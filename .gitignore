@@ -1,3 +1,0 @@
-#.env
-*.log
-/srv/rnp/mysql/data/*
