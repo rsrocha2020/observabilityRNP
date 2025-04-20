@@ -1,0 +1,100 @@
+services:
+  mysql-server:
+    image: mysql:8.0-debian
+    container_name: mysql-server
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    command:
+      --character-set-server=utf8
+      --collation-server=utf8_bin
+      --default-authentication-plugin=mysql_native_password
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+    volumes:
+      - /srv/rnp/mysql_data:/var/lib/mysql
+
+  zabbix-java-gateway:
+    image: zabbix/zabbix-java-gateway:alpine-7.2-latest
+    container_name: zabbix-java-gateway
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+
+  zabbix-server-mysql:
+    image: zabbix/zabbix-server-mysql:alpine-7.2-latest
+    container_name: zabbix-server-mysql
+    depends_on:
+      - mysql-server
+      - zabbix-java-gateway
+    environment:
+      DB_SERVER_HOST: mysql-server
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ZBX_JAVAGATEWAY: zabbix-java-gateway
+    ports:
+      - "10051:10051"
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+
+  zabbix-web-nginx-mysql:
+    image: zabbix/zabbix-web-nginx-mysql:alpine-7.2-latest
+    container_name: zabbix-web-nginx-mysql
+    depends_on:
+      - mysql-server
+      - zabbix-server-mysql
+    environment:
+      ZBX_SERVER_HOST: zabbix-server-mysql
+      DB_SERVER_HOST: mysql-server
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ZBX_LOGIN: ${ZBX_WEB_ADMIN_USER}
+      ZBX_PASSWORD: ${ZBX_WEB_ADMIN_PASSWORD}
+    ports:
+      - "80:8080"
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:alpine-7.2-latest
+    container_name: zabbix-agent
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server-mysql
+      - ZBX_HOSTNAME=zabbix-server-mysql
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+    ports:
+      - "10050:10050"
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - zabbix-net
+    restart: unless-stopped
+    environment:
+      - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - /srv/rnp/grafana_data:/var/lib/grafana
+
+networks:
+  zabbix-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          ip_range: 172.20.240.0/20
