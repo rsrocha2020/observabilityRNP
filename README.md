@@ -22,11 +22,11 @@ Máquina virtualizada em Host Proxmox com 8G de memória, 2vCPUs, 1 Disco de 50G
 ## 🗂️ Estrutura do Projeto
 
 .
-├── docker-compose.yml       # Arquivo principal com definição dos serviços
-├── .env                     # Variáveis de ambiente sensíveis (senhas, usuários)
-└── /srv/rnp/                # Diretório com volumes persistentes
-    ├―─ mysql_data/          # Dados persistentes do MySQL
-    └―─ grafana_data/        # Dados persistentes do Grafana
+├── docker-compose.yml (Arquivo principal com definição dos serviços)
+├── .env (Variáveis de ambiente sensíveis (senhas, usuários))
+└── /srv/rnp/ (Diretório com volumes persistentes)
+    ├―─ mysql_data/ (Dados persistentes do MySQL)
+    └―─ grafana_data/ (Dados persistentes do Grafana)
 
 ---
 
